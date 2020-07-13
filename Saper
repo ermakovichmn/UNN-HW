@@ -1,0 +1,315 @@
+#include <stdio.h>  
+#include <iostream>
+#include <string> 
+#include <sstream> 
+#include <thread>
+using namespace std;
+
+//Создание двумерного массива с минами
+void create(bool**s, int w,int h,int n,int x,int y)
+{
+    srand(static_cast<unsigned int>(time(0)));  
+    int l = 0;
+    int b = 0;
+    //создаю масси
+    for (int i = 0; i < w; i++)
+        s[i] = new bool[h];
+    //заполняю нулями
+    for (int i = 0; i < w; i++)
+        for (int j = 0; j < h; j++)
+            s[i][j] = 0;
+    //цикл, пока кол-во бомб не будт равно переданному
+    while (l <n)
+    {
+        for (int i = 0; i < w; i++)
+        {
+            for (int j = 0; j < h; j++)
+            {
+                b = rand() % 100;
+                //ставлю 1, если сейчас там еще нет бомбы и если игрок не бырал эту клетку
+                if (b > 90 and l < n and s[i][j] == 0 and x-1!=i and y-1 !=j)
+                {
+                    s[i][j] = 1;
+                    l++;
+                }
+            }
+        }
+    }   
+}
+//Создание думерного массива для игрока
+void create1(string** s,int w, int h)
+{
+    for (int i = 0; i < w + 1; i++)
+        s[i] = new string[h + 1];
+    stringstream ss;
+    //заполнение по y столбца с координтами
+    for (int i = 1; i < w + 1; i++)
+    {   
+        ss << i;
+        string n1 = ss.str();
+        s[i][0] = "|" + n1 + "|";
+        ss.str("");
+    }
+    //заполнение по x строчки с координатами
+    for (int i = 1; i < w + 1; i++)
+    {
+        ss << i;
+        string n1 = ss.str();
+        s[0][i] = "|"+n1+"|";
+        ss.str("");
+    }
+    //заполненние пустыми ячейками
+    for (int i = 1; i < w+1; i++)
+        for (int j = 1; j < h+1; j++)
+        {   
+            s[i][j] = "|_|";
+        }
+    s[0][0] = "|_|";  
+}
+//Вывод бомб при поражение
+void outlose(bool** s1,string** s2, int w, int h)
+{
+    for (int i = 0; i < w + 1; i++) {
+        for (int j = 0; j < h + 1; j++)
+        {
+            if (i < w and j < h)
+                if (s1[i][j] == 1)
+                    s2[i + 1][j + 1] = "|B|";
+            cout << s2[i][j];
+        }
+        cout << endl;
+    }
+}
+//функция, проверяющая мины вокруг точки, при выполнение условий вызвает рекурсивные функции 
+string** check(bool** s1,string** s2,int w,int h,int x,int y, string c)
+{
+    int n=0;
+    
+    if (c == "o" or c == "O")
+    {   
+        if (s1[x][y] == 1)
+        {
+            cout << "YOU LOSE!" << endl;
+            outlose(s1, s2, w+1, h+1);
+            exit(1);
+        }
+        s2[x + 1][y + 1] = "|c|";
+        //right
+        if (y < h and s2[x + 1][y + 2] == "|_|")
+        {
+            if (s1[x][y + 1] == 1)
+                n++;
+            /*else if (s1[x][y + 1] == 0 and s2[x+1][y + 2] == "|_|" and s2[x + 1][y + 1] == "|0|")//rigth
+                cheek(s1, s2, w, h, x, y + 1, c);*/
+        }
+        //up
+        if (x > 0 and s2[x][y + 1] == "|_|")
+        {
+            if (s1[x - 1][y] == 1)
+                n++;
+            /*else if (s1[x - 1][y] == 0 and s2[x][y+1] == "|_|")//up
+
+                cheek(s1, s2, w, h, x - 1, y, c);*/
+        }
+        //down
+        if (x < w and s2[x + 2][y + 1] == "|_|")
+        {
+            if (s1[x + 1][y] == 1)
+                n++;
+            /*else if (s1[x + 1][y] == 0 and s2[x+2][y + 1] == "|_|")//down
+                cheek(s1, s2, w, h, x + 1, y, c);*/
+        }
+        //left
+        if (y > 0 and s2[x + 1][y] == "|_|")
+        {
+            if (s1[x][y - 1] == 1)
+                n++;
+            /*else if (s1[x][y - 1] == 0 and s2[x+1][y] == "|_|")
+                cheek(s1, s2, w, h, x, y - 1, c);*/
+        }
+        //down left
+        if (x < w and y > 0)
+        {
+            if (s1[x + 1][y - 1] == 1)
+                n++;
+
+        }
+        //down right
+        if (x < w and y < h)
+        {
+            if (s1[x + 1][y + 1] == 1)
+                n++;
+
+        }
+        //up right
+        if (x > 0 and y < h)
+        {
+            if (s1[x - 1][y + 1] == 1)
+                n++;
+
+        }
+        //up left 
+        if (x > 0 and y > 0)
+        {
+            if (s1[x - 1][y - 1] == 1)
+                n++;
+
+        }
+
+        stringstream ss;
+        ss << n;
+        string n1 = ss.str();
+        s2[x + 1][y + 1] = "|" + n1 + "|";
+
+
+        //rigth
+        if (y < h )
+            if( s1[x][y + 1] == 0 and s2[x + 1][y + 2] == "|_|" and (s2[x + 1][y + 1] == "|0|" or s2[x][y + 1] == "|0|" or s2[x + 2][y + 1] == "|0|"))
+            check(s1, s2, w, h, x, y + 1, c);
+        //up
+        if (x > 0 )
+            if( s1[x - 1][y] == 0 and s2[x][y + 1] == "|_|" and (s2[x + 1][y + 1] == "|0|" or s2[x + 1][y] == "|0|" or s2[x + 1][y + 2] == "|0|"))
+            check(s1, s2, w, h, x - 1, y, c);
+        //down
+        if (x < w )
+            if(s1[x + 1][y] == 0 and s2[x + 2][y + 1] == "|_|" and (s2[x + 1][y + 1] == "|0|" or s2[x + 1][y] == "|0|" or s2[x + 1][y + 2] == "|0|"))
+            check(s1, s2, w, h, x + 1, y, c);
+        //left
+        if (y > 0 )
+            if(s1[x][y - 1] == 0 and s2[x + 1][y] == "|_|" and (s2[x + 1][y + 1] == "|0|" or s2[x][y + 1] == "|0|" or s2[x + 2][y + 1] == "|0|"))
+            check(s1, s2, w, h, x, y - 1, c);
+    }
+    else if (c=="c" or c =="C")
+        s2[x + 1][y + 1] = "|!|";
+    else if (c=="u" or c=="U")
+        s2[x + 1][y + 1] = "|_|";
+    return s2;
+}
+//Вывод бомб для тестов
+void out1(bool** s1,int w, int h)
+{
+    for (int i = 0; i < w; i++) {
+        for (int j = 0; j < h; j++)
+        {
+
+            cout << s1[i][j];
+        }
+        cout << endl;
+    }
+}
+//вывод игрового поля
+void out2(string** s2, int w, int h)
+{
+    for (int i = 0; i < w + 1; i++) {
+        for (int j = 0; j < h + 1; j++)
+        {
+            if (i < 10 and j<1)
+                cout<< " ";
+            if (j>9 and i>0)
+                cout << " " << s2[i][j];
+            else
+                cout << s2[i][j];
+        }
+        cout << endl;
+    }
+}
+//Проверка победы
+void win(bool** s1, string** s2, int w, int h,int n)
+{  
+    int k=0;
+    for (int i = 0; i < w; i++)
+        for (int j = 0; j < h; j++)
+        {
+            if (s2[i + 1][j + 1] == "|!|" and s1[i][j] == 1)
+                k++;
+        }
+    if (k == n)
+    {
+        cout << "YOU WIN!" << endl;
+        exit(1);
+    }
+}   
+int main()
+{  
+    string dif;
+    cout << "Choose difficulty, ease (8x8, 10 bomb),norm (20x20, 40 bomb) or hard (40x40, 120 bomb)" << endl;
+    cin >> dif;
+    int w = 0;
+    int h = 0;
+    int n = 0;
+    if (dif=="ease")
+    {
+         w = 8;
+         h = 8;
+         n = 10;//кол-во бомб
+    }
+    else if((dif == "norm"))
+    {
+         w = 20;
+         h = 20;
+         n = 40;//кол-во бомб
+    }
+    else 
+    {
+         w = 40;
+         h = 40;
+         n = 120;//кол-во бомб
+    }
+
+    bool** s1=new bool* [w];
+    string** s2 = new string * [w+1];
+    thread tC2(create1,s2, w, h);
+    tC2.join();
+    out2(s2, w, h);
+    int x = 0;
+    while (x > h or x < 1)
+    {
+        cout << "enter y" << endl;
+        cin >> x;
+    }
+    int y = 0;
+    while (y > w or y < 1)
+    {
+        cout << "enter x" << endl;
+        cin >> y;
+    }
+    thread tC1(create, s1, w, h, n, x, y);
+    tC1.join();
+    string c = "";
+    while (c != "o" and c != "c" and c != "u")
+    {
+        cout << "o, to open, c, to check, u, to uncheck" << endl;
+        cin >> c;
+    }
+    cout << endl;
+    s2 = check(s1, s2, w - 1, h - 1, x - 1, y - 1, c);
+    //out1(s1, w, h);
+    out2(s2, w, h);
+    while (true) 
+    {   
+        x = 0;
+        while (x > w or x < 1)
+        {
+            cout << "enter y" << endl;
+            cin >> x;//Ввод координат
+        }
+        y = 0;
+        while (y > h or y < 1)
+        {
+            cout << "enter x" << endl;
+            cin >> y;//Ввод координат
+        }
+        c="";
+        while (c != "o" and c != "c" and c != "u")
+        {
+            cout << "o, to open, c, to check, u, to uncheck" << endl;
+            cin >> c;
+        }
+        cout << endl;
+        s2=check(s1, s2, w - 1, h - 1, x - 1, y - 1, c);
+        thread tW(win,s1,s2,w,h,n);
+        tW.join();
+        //out1(s1, w, h);
+        out2(s2, w, h);  
+    }
+}
